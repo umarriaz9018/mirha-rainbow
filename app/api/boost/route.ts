@@ -33,7 +33,11 @@ export async function POST(req: NextRequest) {
 
     if (!result.success) return NextResponse.json({ error: result.error }, { status: 500 });
 
-    return NextResponse.json({ success: true, ...result });
+    // ── FIXED: destructure success out so it is not duplicated ──
+    const { success, ...resultData } = result;
+
+    return NextResponse.json({ success: true, ...resultData });
+
   } catch (err) {
     console.error('[Boost API]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
