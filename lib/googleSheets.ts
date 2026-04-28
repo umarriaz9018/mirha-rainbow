@@ -6,13 +6,29 @@ let cacheTimestamp: number           = 0;
 const CACHE_DURATION                 = 5 * 60 * 1000;
 
 async function getSheetsClient() {
+  const rawKey = process.env.GOOGLE_SHEETS_PRIVATE_KEY || '';
+
+  // Handle both formats:
+  // 1. Key with literal \n characters (from Vercel env vars)
+  // 2. Key with real newlines (from .env.local file)
+  const privateKey = rawKey.replace(/\\n/g, '\n');
+
+  if (!process.env.GOOGLE_SHEETS_CLIENT_EMAIL) {
+    throw new Error('GOOGLE_SHEETS_CLIENT_EMAIL environment variable is not set');
+  }
+
+  if (!privateKey) {
+    throw new Error('GOOGLE_SHEETS_PRIVATE_KEY environment variable is not set');
+  }
+
   const auth = new google.auth.GoogleAuth({
     credentials: {
       client_email: process.env.GOOGLE_SHEETS_CLIENT_EMAIL,
-      private_key:  process.env.GOOGLE_SHEETS_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      private_key:  privateKey,
     },
     scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
   });
+
   const client = await auth.getClient();
   return google.sheets({ version: 'v4', auth: client as any });
 }
